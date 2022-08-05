@@ -1,30 +1,30 @@
 resource "aws_default_vpc" "default" {
-  
+
 }
 
 resource "aws_security_group" "security_group" {
-  name = "http_servers"
-  vpc_id = aws_default_vpc.default
+  name   = "http_servers"
+  vpc_id = aws_default_vpc.default.id
 
   ingress {
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-  } 
+  }
 
   ingress {
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
-    cidr_blocks = [ "0.0.0.0/0" ]
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = -1
-    cidr_blocks = [ "0.0.0.0/0" ]
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
@@ -33,23 +33,23 @@ resource "aws_security_group" "security_group" {
 }
 
 resource "aws_instance" "http_servers" {
-  ami = 
-  key_name = "ec2-project1"
-  instance_type = "t2.micro"
+  ami                    = data.aws_ami.regional_ami.id
+  key_name               = "ec2-project1"
+  instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.security_group.id]
 
-# create an ec2 instance for each subnet
-for_each = data.aws_subnets.subnet_ids.ids
+  # create an ec2 instance for each subnet
+  for_each  = toset(data.aws_subnets.subnet_ids.ids)
   subnet_id = each.value
 
-  tags = [
-    name: "http_servers_${each.value}"
-  ]
+  tags = {
+    name : "http_servers_${each.value}"
+  }
 
   connection {
-    type = "ssh"
-    host = self.public_ip
-    user = "ec2-user"
+    type        = "ssh"
+    host        = self.public_ip
+    user        = "ec2-user"
     private_key = file(var.aws_key_pair)
   }
 
