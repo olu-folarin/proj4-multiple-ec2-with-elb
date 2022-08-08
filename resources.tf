@@ -2,6 +2,35 @@ resource "aws_default_vpc" "default" {
 
 }
 
+# load balancer: separate sec groupfor the c2 instances and the load balancers to prevent people sshing into it.
+resource "aws_security_group" "elb_group" {
+  name   = "elb_secgroup"
+  vpc_id = aws_default_vpc.default.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+
+
 resource "aws_security_group" "security_group" {
   name   = "http_servers"
   vpc_id = aws_default_vpc.default.id
