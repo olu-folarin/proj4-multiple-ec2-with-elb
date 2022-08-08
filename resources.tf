@@ -29,7 +29,20 @@ resource "aws_security_group" "elb_group" {
   }
 }
 
+resource "aws_elb" "classic_elb" {
+  name            = "elb"
+  subnets         = data.aws_subnets.subnet_ids.ids
+  security_groups = [aws_security_group.elb_group.id]
+  #   get all the ids from values in the aws instances values
+  instances = values(aws_instance.http_servers).*.id
 
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+}
 
 resource "aws_security_group" "security_group" {
   name   = "http_servers"
